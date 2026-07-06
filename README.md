@@ -4,6 +4,12 @@
 
 Guanaco is an architectural framework layer built on top of Apache Camel. It decouples business routing logic from physical infrastructure topology by replacing string-based predicates, untyped maps, and nested fluent syntax trees with standard Java algebraic data types (**sealed interfaces** and **records**).
 
+Runnable example projects demonstrating [Guanaco](https://github.com/lilaschuda/guanaco) in action — a compiler-checked, idiomatic Java DSL layer on top of Apache Camel.
+
+This repository is **not** the Guanaco library itself.
+
+> **Not affiliated with the Apache Software Foundation.** This project depends on Apache Camel but is not endorsed by, sponsored by, or otherwise affiliated with the Apache Software Foundation. "Apache," "Camel," "Apache Camel," and the Apache feather logo are trademarks of The Apache Software Foundation.
+
 Licensed under the **Apache 2.0 License**.
 
 ## Core Philosophy
