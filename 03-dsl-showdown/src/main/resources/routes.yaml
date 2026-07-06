@@ -1,0 +1,17 @@
+framework:
+  validation: STRICT
+
+routes:
+  ClaimsProcessor:
+    from: jms:queue:guanaco.claims.inbound?connectionFactory=#jmsConnectionFactory
+    bindings:
+      # Native Multicast handled implicitly via YAML list syntax!
+      ToEmeaAutoSpeedlane: 
+        - jms:queue:emea.auto.speedlane?connectionFactory=#jmsConnectionFactory
+        - jms:queue:emea.compliance.audit?connectionFactory=#jmsConnectionFactory
+        
+      ToEmeaGeneralHighValue: jms:queue:emea.general.highvalue?connectionFactory=#jmsConnectionFactory
+      ToEmeaArchive:          jms:queue:emea.archive?connectionFactory=#jmsConnectionFactory
+      ToAmerFraudHold:        jms:queue:amer.fraud.hold?connectionFactory=#jmsConnectionFactory
+      ToAmerGeneral:          jms:queue:amer.general?connectionFactory=#jmsConnectionFactory
+      ToGlobalTriage:         jms:queue:global.triage.fallback?connectionFactory=#jmsConnectionFactory

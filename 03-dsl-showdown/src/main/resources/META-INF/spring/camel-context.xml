@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+    <!-- ActiveMQ Connection Factory setup used by both Legacy and Guanaco endpoints -->
+    <bean id="activemqConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+        <property name="brokerURL" value="vm://localhost?broker.persistent=false"/>
+    </bean>
+
+    <bean id="jmsConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory" 
+          init-method="start" destroy-method="stop">
+        <property name="maxConnections" value="8"/>
+        <property name="connectionFactory" ref="activemqConnectionFactory"/>
+    </bean>
+
+    <!-- The Legacy Camel Context -->
+    <camelContext id="legacyCamelContext" xmlns="http://camel.apache.org/schema/spring">
+        
+        <route id="xmlClaimsIngestionPipeline">
+            <from uri="jms:queue:xml.claims.inbound?connectionFactory=#jmsConnectionFactory"/>
+            <choice>
+                <when>
+                    <simple>${header.Region} == 'EMEA'</simple>
+                    <choice>
+                        <when>
+                            <simple>${body} contains 'HIGH_VALUE'</simple>
+                            <filter>
+                                <simple>${header.Type} == 'AUTO'</simple>
+                                <multicast>
+                                    <to uri="jms:queue:emea.auto.speedlane?connectionFactory=#jmsConnectionFactory"/>
+                                    <to uri="jms:queue:emea.compliance.audit?connectionFactory=#jmsConnectionFactory"/>
+                                </multicast>
+                            </filter>
+                            <filter>
+                                <simple>${header.Type} != 'AUTO'</simple>
+                                <to uri="jms:queue:emea.general.highvalue?connectionFactory=#jmsConnectionFactory"/>
+                            </filter>
+                        </when>
+                        <otherwise>
+                            <to uri="jms:queue:emea.general.archive?connectionFactory=#jmsConnectionFactory"/>
+                        </otherwise>
+                    </choice>
+                </when>
+                <when>
+                    <simple>${header.Region} == 'AMER'</simple>
+                    <choice>
+                        <when>
+                            <simple>${body} contains 'FRAUD_SUSPECT'</simple>
+                            <to uri="jms:queue:amer.fraud.hold?connectionFactory=#jmsConnectionFactory"/>
+                        </when>
+                        <otherwise>
+                            <to uri="jms:queue:amer.general?connectionFactory=#jmsConnectionFactory"/>
+                        </otherwise>
+                    </choice>
+                </when>
+                <otherwise>
+                    <to uri="jms:queue:global.triage.fallback?connectionFactory=#jmsConnectionFactory"/>
+                </otherwise>
+            </choice>
+        </route>
+
+    </camelContext>
+
+</beans>

@@ -1,0 +1,43 @@
+framework:
+  validation: STRICT
+
+routes:
+  OrderProcessor:
+    from: direct:orders
+    bindings:
+      ToInventory:  direct:inventory
+      ToPayment:    direct:payment
+      ToFraudCheck: direct:fraudCheck
+    errorHandler:
+      deadLetter: jms:queue:orders.DLQ?connectionFactory=#jmsConnectionFactory
+      maxRetries: 3
+
+  FraudCheckProcessor:
+    from: direct:fraudCheck
+    bindings:
+      ToManagement: jms:queue:fraud.management?connectionFactory=#jmsConnectionFactory
+      ToArchive:    jms:queue:fraud.archive?connectionFactory=#jmsConnectionFactory
+      ToCollector:  jms:queue:fraud.analytics?connectionFactory=#jmsConnectionFactory
+    errorHandler:
+      deadLetter: jms:queue:fraud.DLQ?connectionFactory=#jmsConnectionFactory
+      maxRetries: 1
+
+  PaymentProcessor:
+    from: direct:payment
+    bindings:
+      ToRegister:     jms:queue:payment.ledger?connectionFactory=#jmsConnectionFactory
+      ToWireTransfer: jms:queue:payment.wire?connectionFactory=#jmsConnectionFactory
+      ToCredit:       jms:queue:payment.clearing?connectionFactory=#jmsConnectionFactory
+    errorHandler:
+      deadLetter: jms:queue:billing.DLQ?connectionFactory=#jmsConnectionFactory
+      maxRetries: 5
+
+  InventoryProcessor:
+    from: direct:inventory
+    bindings:
+      ToBookkeeping:          jms:queue:inventory.books?connectionFactory=#jmsConnectionFactory
+      ToInventoryFraudCheck:  jms:queue:inventory.audit?connectionFactory=#jmsConnectionFactory
+      ToWarehouse:            jms:queue:inventory.allocation?connectionFactory=#jmsConnectionFactory
+    errorHandler:
+      deadLetter: jms:queue:inventory.DLQ?connectionFactory=#jmsConnectionFactory
+      maxRetries: 2

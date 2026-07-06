@@ -1,0 +1,11 @@
+framework:
+  validation: STRICT
+
+routes:
+  CustomerSupportProcessor:
+    from: direct:support-inbound
+    bindings:
+      # To test the binding check, just Comment/Uncomment any line to break/fix the route startup
+      ToTier1Support:         jms:queue:support.tier1?connectionFactory=#jmsConnectionFactory
+      ToExecutiveEscalation:  jms:queue:support.vip?connectionFactory=#jmsConnectionFactory
+      ToBillingDispute:       jms:queue:support.billing?connectionFactory=#jmsConnectionFactory
