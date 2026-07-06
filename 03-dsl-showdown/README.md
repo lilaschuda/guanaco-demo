@@ -1,77 +1,41 @@
-# guanaco-demo
+# Example 03: The Enterprise DSL Showdown
 
-A runnable example project demonstrating [Guanaco](https://github.com/lilaschuda/guanaco) in action — a compiler-checked, idiomatic Java DSL layer on top of Apache Camel.
+This module provides the ultimate architectural contrast. It implements a complex, multi-variable enterprise scenario using three completely separate design implementations side-by-side to expose the maintenance patterns and failure rates of each.
 
-This repository is **not** the Guanaco library itself. It's a small Maven project that depends on Guanaco and shows what a real application using it looks like end to end: a processor, a sealed-interface route topology, a YAML binding file, and (for migration purposes) a legacy Camel XML route loaded alongside it.
+## The Test Scenario: Inbound Claims Triage Pipeline
 
-> **Not affiliated with the Apache Software Foundation.** This project depends on Apache Camel but is not endorsed by, sponsored by, or otherwise affiliated with the Apache Software Foundation. "Apache," "Camel," "Apache Camel," and the Apache feather logo are trademarks of The Apache Software Foundation.
+Every incoming claim must be scrutinized across region lines (EMEA vs AMER), validated for extreme valuation figures, audited for vehicle category types, and fanned out to distinct fulfillment targets or compliance streams simultaneously.
 
-## What this demonstrates
+                             ┌── [EMEA] ── [HIGH VALUE?] ── [AUTO?] ──> MULTICAST: Speedlane & Audit
+                             │                                 └──> General High Value
+                             │         └── [STANDARD] ──────────────> Archive
+                             │
+[Claims Inbound Queue] ──────┼── [AMER] ── [FRAUD SUSPECT?] ──────────> Fraud Hold Hold
+                             │         └── [CLEAN] ──────────────────> General AMER
+                             │
+                             └── [OTHER] ────────────────────────────> Global Fallback Triage
 
-**A processor with compiler-checked routing.** `OrderProcessor` returns a sealed `OrderRoute<?>` outcome — `ToInventory`, `ToPayment`, or `ToFraudCheck` — and the compiler enforces that every branch is handled:
+---
 
-```java
-@GuanacoRoute
-public class OrderProcessor implements Processor<OrderRoute<?>> {
+## Compared Paradigms
 
-    @Override
-    public OrderRoute<?> process(GuanacoMessage message) throws Exception {
-        String body = message.getBody(String.class);
-        if (body.contains("suspicious")) return new ToFraudCheck(body);
-        if (body.contains("unpaid"))     return new ToPayment(body);
-        return new ToInventory(body);
-    }
-}
-```
+### 1. Legacy Spring XML DSL (camel-context-xml-showdown.xml)
+* The Reality: Highly verbose, structurally bloated configuration file.
+* The Failure: Zero type checking and absolute opacity to standard refactoring tools. String typographical errors inside expression nodes bypass compile loops entirely, resulting in deployment runtime crashes.
 
-**Bindings configured outside of code**, in `src/main/resources/routes.yaml`:
+### 2. Traditional Java Fluent DSL (LegacyFluentShowdownRoute.java)
+* The Reality: A deep, nested fluent chain of builder syntax trees.
+* The Failure: Introduces the severe "Camel Syntax Tax." Mismanaging or misplacing fluent tokens (like using a single .endChoice() instead of an explicit .end().endChoice() closure to pop inner choice builder state scopes) compiles flawlessly, but breaks the routing engine topology layout on startup, raising IllegalArgumentException blocks.
 
-```yaml
-routes:
-  OrderProcessor:
-    from: direct:orders
-    bindings:
-      ToInventory:  mock:inventory
-      ToPayment:    mock:payment
-      ToFraudCheck: mock:fraud
-```
+### 3. The Guanaco Paradigm (ClaimsProcessor.java)
+* The Reality: Pure, un-nested Java logical blocks interacting with sealed algebraic hierarchies.
+* The Victory: Scope bounds are defined using regular Java braces {}. Any structure errors are surfaced directly by the IDE and halted immediately by the compiler. Infrastructure concerns like Parallel Multicasting are extracted cleanly to array items inside routes-showdown.yaml and handled safely behind the framework boundary.
 
-**Legacy Camel XML route compatibility.** `src/main/resources/META-INF/spring/camel-context.xml` contains a traditional Camel route, loaded by Guanaco alongside the sealed-interface route in the same `CamelContext` — intended as a migration aid for teams transitioning existing Camel XML routes incrementally.
+---
 
-## Project structure
+## Executing the Showdown Demo
 
-```
-src/main/java/org/guanaco/demo/
-  Application.java          — entry point: wires routes, starts the context
-  example/
-    OrderProcessor.java     — the processor
-    OrderRoute.java          — sealed interface declaring the route topology
-    ToInventory.java         — route outcomes (records)
-    ToPayment.java
-    ToFraudCheck.java
-
-src/main/resources/
-  routes.yaml                          — endpoint bindings for OrderProcessor
-  META-INF/spring/camel-context.xml    — legacy XML route, loaded for compatibility
-```
-
-## Running it
+Run the main application class programmatically via Maven to watch all three parallel environments initialize concurrently:
 
 ```bash
-mvn clean install
 mvn exec:java
-```
-
-The application starts a `CamelContext`, registers the Guanaco-managed `OrderProcessor` route and the legacy XML route, and stays running until interrupted (`Ctrl+C`).
-
-## Prerequisites
-
-- Java 17+
-- Maven 3.9+
-
-## License and attribution
-
-This demo project is licensed under the Apache License, Version 2.0 — see [LICENSE](./LICENSE). See [NOTICE](./NOTICE) for attribution to Apache Camel.
-
-For the library itself, documentation, and design rationale, see the main [Guanaco repository](https://github.com/lilaschuda/guanaco).
-
