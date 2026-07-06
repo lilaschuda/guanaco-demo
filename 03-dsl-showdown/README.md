@@ -30,7 +30,7 @@ Every incoming claim must be scrutinized across region lines (EMEA vs AMER), val
 
 ### 3. The Guanaco Paradigm (ClaimsProcessor.java)
 * The Reality: Pure, un-nested Java logical blocks interacting with sealed algebraic hierarchies.
-* The Victory: Scope bounds are defined using regular Java braces {}. Any structure errors are surfaced directly by the IDE and halted immediately by the compiler. Infrastructure concerns like Parallel Multicasting are extracted cleanly to array items inside routes-showdown.yaml and handled safely behind the framework boundary.
+* The Victory: Scope bounds are defined using regular Java braces {}. Any structure errors are surfaced directly by the IDE and halted immediately by the compiler. Infrastructure concerns like Parallel Multicasting are extracted cleanly to array items inside routes.yaml and handled safely behind the framework boundary.
 
 ---
 
