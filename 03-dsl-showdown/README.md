@@ -6,6 +6,7 @@ This module provides the ultimate architectural contrast. It implements a comple
 
 Every incoming claim must be scrutinized across region lines (EMEA vs AMER), validated for extreme valuation figures, audited for vehicle category types, and fanned out to distinct fulfillment targets or compliance streams simultaneously.
 
+```text
                              ┌── [EMEA] ── [HIGH VALUE?] ── [AUTO?] ──> MULTICAST: Speedlane & Audit
                              │                                 └──> General High Value
                              │         └── [STANDARD] ──────────────> Archive
@@ -14,7 +15,7 @@ Every incoming claim must be scrutinized across region lines (EMEA vs AMER), val
                              │         └── [CLEAN] ──────────────────> General AMER
                              │
                              └── [OTHER] ────────────────────────────> Global Fallback Triage
-
+```
 ---
 
 ## Compared Paradigms
