@@ -19,7 +19,7 @@
         <java.version>17</java.version>
         <camel.version>4.20.0</camel.version>
         <log4j2-version>2.22.1</log4j2-version>
-        <guanaco.version>0.2.0-SNAPSHOT</guanaco.version>
+        <guanaco.version>0.7.0-SNAPSHOT</guanaco.version>
         <activemq.version>6.2.6</activemq.version>
         
         <!-- Plugin Versions -->
@@ -33,7 +33,8 @@
     <modules>
         <module>01-coexistence</module>
         <module>02-fail-compiler</module>
-        <module>03-dsl-showdown</module>
+	<module>03-dsl-showdown</module>
+	<module>04-resiliency-pipeline</module>
     </modules>
 
     <dependencyManagement>

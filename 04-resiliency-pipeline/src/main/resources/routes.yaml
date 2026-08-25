@@ -1,0 +1,35 @@
+framework:
+  validation: STRICT
+
+routes:
+  IntakeAggregationProcessor:
+    from: direct:intake
+    idempotent:
+      messageIdHeader: messageId
+      capacity: 1000
+    resequence:
+      sequenceHeader: sequenceNumber
+      mode: BATCH
+      capacity: 3
+    aggregate:
+      correlationHeader: orderId
+      strategyRef: mergeStrategy
+      completionSize: 3
+    bindings:
+      ToMerged: "log:merged?showHeaders=false"
+
+  PartnerDispatchProcessor:
+    from: direct:partnerOrders
+    bindings:
+      ToPartner:
+        uri: "direct:flakyPartner"
+        throttler:
+          requestsPerPeriod: 5
+          timePeriodMillis: 1000
+        delayer:
+          delayStrategyRef: backoffStrategy
+        circuitBreaker:
+          failureRateThreshold: 50
+          slidingWindowSize: 4
+          minimumNumberOfCalls: 4
+          waitDurationInOpenStateMs: 3000

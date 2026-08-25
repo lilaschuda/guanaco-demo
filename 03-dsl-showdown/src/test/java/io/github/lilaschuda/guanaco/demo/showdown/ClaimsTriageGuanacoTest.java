@@ -1,8 +1,10 @@
 package io.github.lilaschuda.guanaco.demo.showdown;
 
+import io.github.lilaschuda.guanaco.config.BindingTarget;
 import io.github.lilaschuda.guanaco.config.GuanacoConfig.ValidationMode;
 import io.github.lilaschuda.guanaco.testutils.GuanacoRuntimeEnvironment;
 import io.github.lilaschuda.guanaco.testutils.GuanacoTestSupport;
+import java.util.List;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,9 +37,15 @@ public class ClaimsTriageGuanacoTest {
     @Test
     void emea_autoClaim_routesToSpeedlane() throws Exception {
         // Wire up a programmatic route configuration for the showdown validation
+        BindingTarget bt1 = new BindingTarget();
+        bt1.setUri("mock:emea-auto-speedlane");
+        List<BindingTarget> btl1 = List.of(bt1);
+        BindingTarget bt2 = new BindingTarget();
+        bt2.setUri("mock:global-triage");
+        List<BindingTarget> btl2 = List.of(bt2);
         testSupport.route("ClaimsProcessor", "direct:claims-in", Map.of(
-                "ToEmeaAutoSpeedlane", "mock:emea-auto-speedlane",
-                "ToGlobalTriage", "mock:global-triage"
+                "ToEmeaAutoSpeedlane", btl1,
+                "ToGlobalTriage", btl2
         ));
 
         env = testSupport.start();
@@ -59,9 +67,15 @@ public class ClaimsTriageGuanacoTest {
 
     @Test
     void amer_highFraudRisk_routesToFraudHold() throws Exception {
+        BindingTarget bt1 = new BindingTarget();
+        bt1.setUri("mock:amer-fraud-hold");
+        List<BindingTarget> btl1 = List.of(bt1);
+        BindingTarget bt2 = new BindingTarget();
+        bt2.setUri("mock:amer-general");
+        List<BindingTarget> btl2 = List.of(bt2);
         testSupport.route("ClaimsProcessor", "direct:claims-in", Map.of(
-                "ToAmerFraudHold", "mock:amer-fraud-hold",
-                "ToAmerGeneral", "mock:amer-general"
+                "ToAmerFraudHold", btl1,
+                "ToAmerGeneral", btl2
         ));
 
         env = testSupport.start();
@@ -83,9 +97,15 @@ public class ClaimsTriageGuanacoTest {
 
     @Test
     void emea_highValueGeneralClaim_routesToEmeaGeneralHighValue() throws Exception {
+        BindingTarget bt1 = new BindingTarget();
+        bt1.setUri("mock:emea-high-value");
+        List<BindingTarget> btl1 = List.of(bt1);
+        BindingTarget bt2 = new BindingTarget();
+        bt2.setUri("mock:emea-archive");
+        List<BindingTarget> btl2 = List.of(bt2);
         testSupport.route("ClaimsProcessor", "direct:claims-in", Map.of(
-                "ToEmeaGeneralHighValue", "mock:emea-high-value",
-                "ToEmeaArchive", "mock:emea-archive"
+                "ToEmeaGeneralHighValue", btl1,
+                "ToEmeaArchive", btl2
         ));
 
         env = testSupport.start();
@@ -107,8 +127,11 @@ public class ClaimsTriageGuanacoTest {
 
     @Test
     void unknownRegion_routesToGlobalTriageFallback() throws Exception {
+        BindingTarget bt = new BindingTarget();
+        bt.setUri("mock:global-fallback");
+        List<BindingTarget> btl = List.of(bt);
         testSupport.route("ClaimsProcessor", "direct:claims-in", Map.of(
-                "ToGlobalTriage", "mock:global-fallback"
+                "ToGlobalTriage", btl
         ));
 
         env = testSupport.start();

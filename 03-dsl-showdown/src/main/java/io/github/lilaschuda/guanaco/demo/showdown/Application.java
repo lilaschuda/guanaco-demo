@@ -18,8 +18,8 @@ public class Application {
         
         ctx.setApplicationContext(sac);
         configure(ctx);
-        ctx.wireRoutes();
         ctx.addRoutes(new LegacyFluentShowdownRoute());
+        ctx.wireRoutes();
         ctx.start();
         
         Runtime.getRuntime().addShutdownHook(new Thread(ctx::stop));
