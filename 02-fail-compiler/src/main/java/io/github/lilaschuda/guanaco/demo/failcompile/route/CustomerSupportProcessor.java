@@ -1,9 +1,9 @@
 package io.github.lilaschuda.guanaco.demo.failcompile.route;
 
 import org.apache.camel.Exchange;
-import io.github.lilaschuda.guanaco.annotation.GuanacoRoute;
+import io.github.lilaschuda.guanaco.api.GuanacoRoute;
 import static io.github.lilaschuda.guanaco.demo.failcompile.route.SupportRouteType.GENERAL_TICKET;
-import io.github.lilaschuda.guanaco.dsl.Processor;
+import io.github.lilaschuda.guanaco.api.Processor;
 
 @GuanacoRoute
 public class CustomerSupportProcessor implements Processor<CustomerSupportRoute<?>> {

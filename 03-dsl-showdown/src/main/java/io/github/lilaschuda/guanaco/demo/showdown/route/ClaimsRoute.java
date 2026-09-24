@@ -1,6 +1,6 @@
 package io.github.lilaschuda.guanaco.demo.showdown.route;
 
-import io.github.lilaschuda.guanaco.core.RouteOutcome;
+import io.github.lilaschuda.guanaco.api.RouteOutcome;
 
 public sealed interface ClaimsRoute<T> extends RouteOutcome 
     permits ToEmeaAutoSpeedlane, ToEmeaGeneralHighValue, ToEmeaArchive, 

@@ -1,6 +1,6 @@
 package io.github.lilaschuda.guanaco.demo.failcompile.route;
 
-import io.github.lilaschuda.guanaco.core.RouteOutcome;
+import io.github.lilaschuda.guanaco.api.RouteOutcome;
 
 public sealed interface CustomerSupportRoute<T> extends RouteOutcome 
     permits ToTier1Support, ToExecutiveEscalation, ToBillingDispute {

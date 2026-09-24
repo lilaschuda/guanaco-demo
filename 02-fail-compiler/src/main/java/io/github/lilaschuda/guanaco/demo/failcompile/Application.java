@@ -2,7 +2,7 @@ package io.github.lilaschuda.guanaco.demo.failcompile;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.camel.component.jms.JmsComponent;
-import io.github.lilaschuda.guanaco.core.GuanacoContext;
+import io.github.lilaschuda.guanaco.context.GuanacoContext;
 import org.springframework.context.support.StaticApplicationContext;
 
 /**

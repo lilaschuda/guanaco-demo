@@ -1,6 +1,6 @@
 package io.github.lilaschuda.guanaco.demo.resiliencypipeline;
 
-import io.github.lilaschuda.guanaco.core.GuanacoContext;
+import io.github.lilaschuda.guanaco.context.GuanacoContext;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.camel.Exchange;
 import org.apache.camel.ProducerTemplate;

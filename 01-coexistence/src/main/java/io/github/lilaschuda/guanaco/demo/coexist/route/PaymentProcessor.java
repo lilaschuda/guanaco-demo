@@ -1,8 +1,8 @@
 package io.github.lilaschuda.guanaco.demo.coexist.route;
 
 import org.apache.camel.Exchange;
-import io.github.lilaschuda.guanaco.annotation.GuanacoRoute;
-import io.github.lilaschuda.guanaco.dsl.Processor;
+import io.github.lilaschuda.guanaco.api.GuanacoRoute;
+import io.github.lilaschuda.guanaco.api.Processor;
 import java.util.logging.Logger;
 
 @GuanacoRoute

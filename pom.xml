@@ -16,10 +16,10 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <java.version>17</java.version>
+        <java.version>21</java.version>
         <camel.version>4.20.0</camel.version>
         <log4j2-version>2.22.1</log4j2-version>
-        <guanaco.version>0.7.0-SNAPSHOT</guanaco.version>
+        <guanaco.version>1.2.0</guanaco.version>
         <activemq.version>6.2.6</activemq.version>
         
         <!-- Plugin Versions -->
