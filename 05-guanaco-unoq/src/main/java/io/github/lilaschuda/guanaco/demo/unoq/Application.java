@@ -3,7 +3,6 @@ package io.github.lilaschuda.guanaco.demo.unoq;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.camel.component.jms.JmsComponent;
 import io.github.lilaschuda.guanaco.context.GuanacoContext;
-import io.github.lilaschuda.guanaco.demo.unoq.route.LegacyJavaRouteBuilder;
 import org.springframework.context.support.StaticApplicationContext;
 
 /**
@@ -19,7 +18,6 @@ public class Application {
         ctx.setApplicationContext(sac);
         configure(ctx);
         ctx.wireRoutes();
-        //ctx.addRoutes(new LegacyJavaRouteBuilder());
         ctx.start();
         GuanacoUartBridge.start(ctx);
         
