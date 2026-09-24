@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Scanner;
 
 public class GuanacoUartBridge {
+
     private static final Logger log = LoggerFactory.getLogger(GuanacoUartBridge.class);
 
     public static void start(GuanacoContext context) {
@@ -31,22 +32,24 @@ public class GuanacoUartBridge {
             try (Scanner scanner = new Scanner(port.getInputStream())) {
                 while (scanner.hasNextLine()) {
                     String line = scanner.nextLine();
-                    if (line.isBlank()) continue;
+                    if (line.isBlank()) {
+                        continue;
+                    }
 
                     try {
-                        // 1. Instantly type-safe deserialization via Jackson
                         ArduinoEvent event = mapper.readValue(line, ArduinoEvent.class);
-                        
-                        // 2. Dispatch to the Guanaco routing context
                         producer.sendBody("direct:coprocessor-events", event);
-                        
+                    } catch (org.apache.camel.CamelExecutionException e) {
+                        // The UART frame was perfect, but the Guanaco route rejected/failed the delivery
+                        log.error("Routing delivery failed: {}", e.getCause().getMessage());
                     } catch (Exception e) {
+                        // The UART frame was garbage/fragmented
                         log.warn("Dropped malformed UART frame: {}", e.getMessage());
                     }
                 }
             }
         });
-        
+
         bridgeThread.setName("uart-ingress-daemon");
         bridgeThread.setDaemon(true); // Allows the JVM to shut down gracefully
         bridgeThread.start();

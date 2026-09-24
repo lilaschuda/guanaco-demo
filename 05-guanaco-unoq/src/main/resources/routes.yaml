@@ -2,9 +2,27 @@ framework:
   validation: STRICT
 
 routes:
-  CoprocessorIngress:
-    from: direct:coprocessor-events
+      
+#  CoprocessorIngress:
+#    from: direct:coprocessor-events
+#    bindings:
+#      StateUpdated: direct:digital-pipeline
+#      HardwareFault: direct:fault-triage
+#      TelemetrySampled:
+#        - uri: direct:analog-pipeline
+#          throttler:
+#            requestsPerPeriod: 2
+#            timePeriodMillis: 1000
+#            enabled: true
+      
+  # The new downstream consumer
+  AnalogTelemetryPipeline:
+    from: direct:analog-pipeline
     bindings:
-      TelemetrySampled: direct:analog-pipeline
-      StateUpdated: direct:digital-pipeline
-      HardwareFault: direct:fault-triage
+        IgnoreSample:
+          - uri: direct:nullRoute
+            throttler:
+              requestsPerPeriod: 2
+              timePeriodMillis: 1000
+              enabled: true
+        
