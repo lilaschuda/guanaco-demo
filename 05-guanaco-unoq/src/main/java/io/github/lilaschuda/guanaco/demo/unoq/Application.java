@@ -20,7 +20,7 @@ public class Application {
         configure(ctx);
         ctx.wireRoutes();
         GuanacoUartBridge.start(ctx);
-        ctx.addRoutes(new LegacyJavaRouteBuilder());
+        //ctx.addRoutes(new LegacyJavaRouteBuilder());
         ctx.start();
         
         Runtime.getRuntime().addShutdownHook(new Thread(ctx::stop));
