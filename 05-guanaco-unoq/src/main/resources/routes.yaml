@@ -1,0 +1,10 @@
+framework:
+  validation: STRICT
+
+routes:
+  CoprocessorIngress:
+    from: direct:coprocessor-events
+    bindings:
+      TelemetrySampled: direct:analog-pipeline
+      StateUpdated: direct:digital-pipeline
+      HardwareFault: direct:fault-triage

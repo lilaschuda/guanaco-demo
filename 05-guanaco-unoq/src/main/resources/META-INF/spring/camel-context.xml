@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+<!--     ActiveMQ Connection Factory setup used by both Legacy and Guanaco endpoints 
+    <bean id="activemqConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+        <property name="brokerURL" value="vm://localhost?broker.persistent=false"/>
+    </bean>
+
+    <bean id="jmsConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory" 
+          init-method="start" destroy-method="stop">
+        <property name="maxConnections" value="8"/>
+        <property name="connectionFactory" ref="activemqConnectionFactory"/>
+    </bean>
+
+     The Legacy Camel Context 
+    <camelContext id="legacyCamelContext" xmlns="http://camel.apache.org/schema/spring">
+        
+         Legacy File Ingestion Route: Simulating an old system dropping files 
+        <route id="legacyFileOrderIngestion">
+            <from uri="file:target/inbox?include=.*\.csv&amp;delete=true"/>
+            
+             Traditional verbose manipulation 
+            <log message="Legacy system intercepted file: ${header.CamelFileName}"/>
+            <setHeader name="CustomerTier">
+                <constant>LEGACY_B2B</constant>
+            </setHeader>
+            
+             Convert stream to text payload 
+            <convertBodyTo type="java.lang.String"/>
+            
+             Hand off smoothly into the Modern, Type-Safe Guanaco Processing Line 
+            <to uri="direct:orders"/>
+        </route>
+
+         A separate legacy route running side-by-side doing something else entirely 
+        <route id="legacyMetricsReporter">
+            <from uri="timer:metricsTrigger?period=60000"/>
+            <setBody>
+                <simple>{"heartbeat": "alive", "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}"}</simple>
+            </setBody>
+            <to uri="jms:queue:system.metrics?connectionFactory=#jmsConnectionFactory"/>
+        </route>
+
+    </camelContext>-->
+
+</beans>

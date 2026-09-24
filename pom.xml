@@ -35,6 +35,7 @@
         <module>02-fail-compiler</module>
 	<module>03-dsl-showdown</module>
 	<module>04-resiliency-pipeline</module>
+	<module>05-guanaco-unoq</module>
     </modules>
 
     <dependencyManagement>
