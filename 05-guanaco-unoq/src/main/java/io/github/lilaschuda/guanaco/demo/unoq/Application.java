@@ -30,6 +30,7 @@ public class Application {
         ctx.getRegistry().bind("jmsConnectionFactory", cf);
         JmsComponent jms = JmsComponent.jmsComponentAutoAcknowledge(cf);
         ctx.addComponent("jms", jms);
+        //ctx.registerAggregationStrategy("debounceStrategy", new org.apache.camel.processor.aggregate.UseLatestAggregationStrategy());
     }
     
 }

@@ -4,11 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fazecast.jSerialComm.SerialPort;
 import io.github.lilaschuda.guanaco.context.GuanacoContext;
 import io.github.lilaschuda.guanaco.demo.unoq.route.ArduinoEvent;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import org.apache.camel.ProducerTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Scanner;
 
 public class GuanacoUartBridge {
 
@@ -29,24 +30,32 @@ public class GuanacoUartBridge {
             }
             log.info("Opened raw UART connection to STM32 Coprocessor.");
 
-            try (Scanner scanner = new Scanner(port.getInputStream())) {
-                while (scanner.hasNextLine()) {
-                    String line = scanner.nextLine();
+            try (java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(port.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
                     if (line.isBlank()) {
                         continue;
                     }
 
                     try {
-                        ArduinoEvent event = mapper.readValue(line, ArduinoEvent.class);
-                        producer.sendBody("direct:coprocessor-events", event);
-                    } catch (org.apache.camel.CamelExecutionException e) {
-                        // The UART frame was perfect, but the Guanaco route rejected/failed the delivery
-                        log.error("Routing delivery failed: {}", e.getCause().getMessage());
+                        try {
+                            // Demultiplex at the bare-metal edge using ultra-fast string matching
+                            if (line.contains("\"PinChange\"")) {
+                                producer.sendBody("seda:digital-ingress?discardWhenFull=true", line);
+                            } else if (line.contains("\"AnalogSample\"")) {
+                                producer.sendBody("seda:analog-ingress?discardWhenFull=true", line);
+                            }
+                        } catch (Exception e) {
+                            log.error("Failed to hand off UART frame to Camel", e);
+                        }
                     } catch (Exception e) {
-                        // The UART frame was garbage/fragmented
-                        log.warn("Dropped malformed UART frame: {}", e.getMessage());
+                        // If Camel throws an endpoint or routing exception, log it safely 
+                        // without killing the hardware reader loop.
+                        log.error("Failed to hand off UART frame to Camel: {}", e.getMessage());
                     }
                 }
+            } catch (Exception e) {
+                log.error("Fatal hardware connection error on /dev/ttyHS1", e);
             }
         });
 

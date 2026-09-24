@@ -2,14 +2,23 @@ framework:
   validation: STRICT
 
 routes:
+#  CoprocessorIngressProcessor:
+#    from: seda:raw-uart-ingress?discardWhenFull=true
+#    bindings:
+#      TelemetrySampled: seda:analog-pipeline
+#      StateUpdated: seda:digital-pipeline
+#      HardwareFault: log:malformed-hardware-frame?level=WARN
+
+  DigitalStatePipeline:
+    from: seda:digital-ingress?discardWhenFull=true
+    bindings:
+      ChangedState:
+        - uri: log:com.example.route?level=OFF
 
   AnalogTelemetryPipeline:
-    from: direct:coprocessor-events
+    from: seda:analog-ingress?discardWhenFull=true
+    sample:
+      samplePeriodMillis: 10000
     bindings:
         IgnoreSample:
           - uri: log:com.example.route?level=OFF
-            throttler:
-              requestsPerPeriod: 2
-              timePeriodMillis: 1000
-              enabled: true
-        
