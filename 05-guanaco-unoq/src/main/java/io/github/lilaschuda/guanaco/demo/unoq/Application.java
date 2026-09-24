@@ -19,6 +19,7 @@ public class Application {
         ctx.setApplicationContext(sac);
         configure(ctx);
         ctx.wireRoutes();
+        GuanacoUartBridge.start(ctx);
         ctx.addRoutes(new LegacyJavaRouteBuilder());
         ctx.start();
         
