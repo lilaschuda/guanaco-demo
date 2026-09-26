@@ -21,7 +21,7 @@ public class GuanacoUartBridge {
 
         Thread bridgeThread = new Thread(() -> {
             SerialPort port = SerialPort.getCommPort("/dev/ttyHS1");
-            port.setBaudRate(115200);
+            port.setComPortParameters(460800, 8, 1, SerialPort.NO_PARITY);
             port.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 0, 0);
 
             if (!port.openPort()) {
@@ -44,6 +44,8 @@ public class GuanacoUartBridge {
                                 producer.sendBody("seda:digital-ingress?discardWhenFull=true", line);
                             } else if (line.contains("\"AnalogSample\"")) {
                                 producer.sendBody("seda:analog-ingress?discardWhenFull=true", line);
+                            } else {
+                                log.error("No matching type found in message!");
                             }
                         } catch (Exception e) {
                             log.error("Failed to hand off UART frame to Camel", e);

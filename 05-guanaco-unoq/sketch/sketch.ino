@@ -3,48 +3,38 @@
 const int BUTTON_PIN = 2;
 const int ANALOG_PIN = A0;
 
-// 1. The Native C++ Ring Buffer
-const int QUEUE_SIZE = 16;
-struct DigitalEvent {
-  boolean state;
-  unsigned long timestamp;
-  unsigned long seq;
-};
+// 1. Classic Debounce State
+boolean currentStableState = HIGH;
+boolean lastFlickerState = HIGH;
+unsigned long lastDebounceTime = 0;
+unsigned long digitalSeq = 0;
 
-volatile DigitalEvent eventQueue[QUEUE_SIZE];
-volatile int head = 0;
-volatile int tail = 0;
-
-// 2. Hybrid State
-volatile boolean reportedState = HIGH;
-volatile unsigned long lastTransitionTime = 0;
-volatile unsigned long digitalSeq = 0;
-
+// 2. Analog State
 unsigned long lastTelemetryTime = 0;
 
-// 3. Pre-allocated Static Buffer (Zero Heap Allocation)
-char txBuffer[128];
+// 3. Paced TX Ring Buffer (Defeats Linux FIFO Overruns)
+const int TX_BUFFER_SIZE = 512;
+char txBuffer[TX_BUFFER_SIZE];
+int txHead = 0;
+int txTail = 0;
+unsigned long lastTxMicros = 0;
+char formatBuf[128];
 
-void queueEvent(boolean state, unsigned long timeMs) {
-  int nextHead = (head + 1) % QUEUE_SIZE;
-  if (nextHead != tail) {
-    eventQueue[head].state = state;
-    eventQueue[head].timestamp = timeMs;
-    eventQueue[head].seq = ++digitalSeq;
-    head = nextHead;
-  }
-}
-
-void hwInterrupt() {
-  unsigned long now = millis();
-  boolean physicalPin = digitalRead(BUTTON_PIN);
-
-  if (physicalPin != reportedState) {
-    if (now - lastTransitionTime > 10) {
-      reportedState = physicalPin;
-      lastTransitionTime = now;
-      queueEvent(reportedState, now);
+// Fast memory queuing (Zero blocking)
+void enqueueString(const char* str) {
+  while (*str) {
+    int nextHead = (txHead + 1) % TX_BUFFER_SIZE;
+    if (nextHead != txTail) {
+      txBuffer[txHead] = *str;
+      txHead = nextHead;
     }
+    str++;
+  }
+  // Append standard Guanaco/Camel newline boundary
+  int nextHead = (txHead + 1) % TX_BUFFER_SIZE;
+  if (nextHead != txTail) {
+    txBuffer[txHead] = '\n';
+    txHead = nextHead;
   }
 }
 
@@ -52,43 +42,43 @@ void setup() {
   HOST_UART.begin(115200);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
 
-  reportedState = digitalRead(BUTTON_PIN);
-  attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), hwInterrupt, CHANGE);
+  currentStableState = digitalRead(BUTTON_PIN);
+  lastFlickerState = currentStableState;
 }
 
 void loop() {
   unsigned long currentMillis = millis();
+  unsigned long currentMicros = micros();
 
-  // 4. The Self-Healing Sweeper
-  boolean physicalPin = digitalRead(BUTTON_PIN);
-  if (physicalPin != reportedState) {
-    if (currentMillis - lastTransitionTime > 10) {
-      noInterrupts();
-      if (digitalRead(BUTTON_PIN) != reportedState) {
-        reportedState = digitalRead(BUTTON_PIN);
-        lastTransitionTime = currentMillis;
-        queueEvent(reportedState, currentMillis);
-      }
-      interrupts();
+  // 4. The Micro-Pacer (1 byte every 500 microseconds = 2000 chars/sec)
+  // This easily clears our 700 chars/sec telemetry load, but spreads the bytes
+  // wide enough that the Qualcomm RX FIFO can never overflow.
+  if (txHead != txTail) {
+    if (currentMicros - lastTxMicros >= 500) {
+      HOST_UART.write(txBuffer[txTail]);
+      txTail = (txTail + 1) % TX_BUFFER_SIZE;
+      lastTxMicros = currentMicros;
     }
   }
 
-  // 5. Drain the Queue when the CPU is free
-  if (head != tail) {
-    noInterrupts();
-    DigitalEvent evt;
-    evt.state = eventQueue[tail].state;
-    evt.timestamp = eventQueue[tail].timestamp;
-    evt.seq = eventQueue[tail].seq;
-    tail = (tail + 1) % QUEUE_SIZE;
-    interrupts();
+  // 5. The Trailing-Edge State Machine (Runs continuously unblocked)
+  boolean reading = digitalRead(BUTTON_PIN);
 
-    // Fast, heap-free string formatting
-    snprintf(txBuffer, sizeof(txBuffer),
-             "{\"@type\":\"PinChange\",\"pin\":%d,\"state\":%s,\"timestampMs\":%lu,\"seq\":%lu}",
-             BUTTON_PIN, evt.state == LOW ? "true" : "false", evt.timestamp, evt.seq);
+  if (reading != lastFlickerState) {
+    lastDebounceTime = currentMillis;
+    lastFlickerState = reading;
+  }
 
-    HOST_UART.println(txBuffer);
+  if ((currentMillis - lastDebounceTime) > 10) {
+    if (reading != currentStableState) {
+      currentStableState = reading;
+
+      snprintf(formatBuf, sizeof(formatBuf),
+               "{\"@type\":\"PinChange\",\"pin\":%d,\"state\":%s,\"timestampMs\":%lu,\"seq\":%lu}",
+               BUTTON_PIN, currentStableState == LOW ? "true" : "false", currentMillis, ++digitalSeq);
+
+      enqueueString(formatBuf);
+    }
   }
 
   // 6. Analog Telemetry Stream (10Hz)
@@ -98,14 +88,13 @@ void loop() {
     int rawVal = analogRead(ANALOG_PIN);
     double voltage = (rawVal / 1023.0) * 3.3;
 
-    // Manual float formatting bypasses missing %f support on some bare-metal compilers
     int v_int = (int)voltage;
     int v_frac = (int)((voltage - v_int) * 100);
 
-    snprintf(txBuffer, sizeof(txBuffer),
+    snprintf(formatBuf, sizeof(formatBuf),
              "{\"@type\":\"AnalogSample\",\"channel\":0,\"rawValue\":%d,\"voltage\":%d.%02d}",
              rawVal, v_int, v_frac);
 
-    HOST_UART.println(txBuffer);
+    enqueueString(formatBuf);
   }
 }

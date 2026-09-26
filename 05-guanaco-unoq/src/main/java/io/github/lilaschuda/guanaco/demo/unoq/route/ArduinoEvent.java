@@ -16,8 +16,6 @@ public sealed interface ArduinoEvent permits
 
     // Added 'long seq' to match the C++ payload
     record PinChange(int pin, boolean state, long timestampMs, long seq) implements ArduinoEvent {}
-    
     record AnalogSample(int channel, int rawValue, double voltage) implements ArduinoEvent {}
-    
     record Fault(int code, String message) implements ArduinoEvent {}
 }

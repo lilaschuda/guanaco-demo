@@ -9,16 +9,19 @@ routes:
 #      StateUpdated: seda:digital-pipeline
 #      HardwareFault: log:malformed-hardware-frame?level=WARN
 
-  DigitalStatePipeline:
+  DigitalStateProcessor:
     from: seda:digital-ingress?discardWhenFull=true
     bindings:
-      ChangedState:
-        - uri: log:com.example.route?level=OFF
+      StatePublished: log:digital-bridge?level=INFO
+      HardwareFault: log:malformed-hardware-frame?level=WARN
+      IgnoreSample: log:com.example.route?level=OFF
+        
 
-  AnalogTelemetryPipeline:
+  AnalogTelemetryProcessor:
     from: seda:analog-ingress?discardWhenFull=true
     sample:
       samplePeriodMillis: 10000
     bindings:
-        IgnoreSample:
-          - uri: log:com.example.route?level=OFF
+        StatePublished: log:analog-bridge?level=INFO
+        HardwareFault: log:malformed-hardware-frame?level=WARN
+        IgnoreSample: log:com.example.route?level=OFF
